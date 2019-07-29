@@ -74,90 +74,99 @@ c) correct answer (I would use a number for this)
 11. Display the score in the console. Use yet another method for this.
 */
 
-function loopGame(quizQuestions) {
-    
-    var result, score;
-    
-    score = 0;
 
-    while (true){
-        
+
+(function(){ // using IIFE to hide variables/funtions from global environment and prevent interference
+
+    var Question = function(questionItself, answerOptions, correctAnswer) {  // function constructor
+        this.questionItself = questionItself;
+        this.answerOptions = answerOptions;
+        this.correctAnswer = correctAnswer;
+    }
+
+    
+    Question.prototype.askQuestion  = function() { // method inherited through prototype, not instance
+
+        console.log(this.questionItself);
+
+        for (var i = 0; i <= this.answerOptions.length-1; i++) {
+            console.log(i + ' - ' +this.answerOptions[i]);
+        }  
+    }
+    
+    
+    Question.prototype.displayScore  = function(score) { // method inherited through prototype, not instance
+        console.log('\n------------------------------');
         console.log('Current score: ' + score);
-        result = answerRandomQuestion(quizQuestions);  
+        console.log('------------------------------\n');
+    }
+    
+
+    Question.prototype.checkAnswer  = function(selectedAnswer, scoreCallback) { // method inherited through prototype, not instance
+         
+        //var sc; // not necessary to declare vairable?
+
+        if (parseInt(selectedAnswer) === this.correctAnswer) { // use parseInt and === instead of ==
+            console.log('\nCorrect!\n');   
+            sc = scoreCallback(true);
+        } else {
+            console.log('\nIncorrect.\n');
+            sc = scoreCallback(false);
+        } 
         
-        if (result === 'exit'){
-            break;
-        } else if (result === 'Correct!') {
-            score += 1
+        this.displayScore(sc);
+    }
+    
+    
+    /* 
+    score () defined outside playGame to prevent re-run with recursion
+    running score() returns the inner function and sets the sc variable to 0 only once
+    the inner function adds 1 to sc but does not reset it to zero
+    sc variable is still available to other functions through closure?
+    */
+    
+    function score() {
+        
+    var sc = 0;
+        
+    return function(correct) {
+        if (correct) {sc++}
+        return sc; // need to return sc to pass it to displayScore()?
         }
     }
-}
-
-function answerRandomQuestion(quizQuestions) {
-
-    var questionNumber = Math.floor(Math.random() * quizQuestions.length);
-
-    quizQuestions[questionNumber].askQuestion();
-
-    var selectedAnswer = prompt('Select your answer by number, or type \'exit\' to quit.');
-
-    var result = quizQuestions[questionNumber].checkAnswer(selectedAnswer); 
     
-    if (result !== 'exit'){
-        console.log(result);
+    var keepScore = score(); 
+    
+
+    function playGame(quizQuestions) {
+
+        var questionNumber = Math.floor(Math.random() * quizQuestions.length);
+
+        quizQuestions[questionNumber].askQuestion();
+
+        var selectedAnswer = prompt('Select your answer by number, or type \'exit\' to quit.');
+
+        if (selectedAnswer !== 'exit'){
+            quizQuestions[questionNumber].checkAnswer(selectedAnswer, keepScore); // keepScore is scoreCallback
+            playGame(quizQuestions); // using recursion
+        }
     }
     
-    return result 
-}
 
+    var engineer = new Question('Who is the best engineer?', 
+                                ['Bruce Banner', 'Peter Parker', 'Tony Stark'], 
+                                2);
 
-var Question = function(questionItself, answerOptions, correctAnswer) {
-    this.questionItself = questionItself;
-    this.answerOptions = answerOptions;
-    this.correctAnswer = correctAnswer;
-}
+    var superman = new Question('What is superman\'s birth name?', 
+                                ['Bruce Wayne', 'Kal-El', 'Clark Kent', 'Kakarot'], 
+                                1);
 
-Question.prototype.askQuestion  = function() {
+    var ikal = new Question('What does Ikal mean?', 
+                            ['Spirit', 'Circle', 'Light', 'Ancestor', 'Unique'],
+                            0);
+
+    quizQuestions = [engineer, superman, ikal];
+
+    playGame(quizQuestions);
     
-    console.log(this.questionItself);
-    
-    for (var i = 0; i <= this.answerOptions.length-1; i += 1) {
-    console.log(i + ' - ' +this.answerOptions[i]);
-    }
-};
-
-Question.prototype.checkAnswer  = function(selectedAnswer) {
-    
-    //var isCorrect = selectedAnswer == this.correctAnswer ? 'Correct' : 'Incorrect';
-    //console.log(isCorrect);
-    
-    if (selectedAnswer == 'exit'){
-        return 'exit';
-    } else if (selectedAnswer == this.correctAnswer) {
-        return 'Correct!';   
-    } else {
-        return 'Incorrect.';
-    }
-
-    
-};
-
-
-var engineer = new Question('Who is the best engineer?', 
-                            ['Bruce Banner', 'Peter Parker', 'Tony Stark', 'Thor Odinson'], 
-                            2);
-
-var superman = new Question('What is superman\'s birth name?', 
-                            ['Bruce Wayne', 'Kal-El', 'Clark Kent', 'Kakarot'], 
-                            1);
-
-var ikal = new Question('What does Ikal mean?', 
-                        ['Spirit', 'Circle', 'Light', 'Ancestor'],
-                        0);
-
-quizQuestions = [engineer, superman, ikal];
-
-loopGame(quizQuestions);
-
-
-
+})(); // IIFE
