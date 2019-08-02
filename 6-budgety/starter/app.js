@@ -1,5 +1,54 @@
 var budgetController = (function(){
     
+    var Expense = function(id, description, value){
+        this.id = id;
+        this.description = description;
+        this.value = value;
+    };
+    
+    var Income = function(id, description, value){
+        this.id = id;
+        this.description = description;
+        this.value = value;
+    };
+    
+    var database = {
+        allItems: {
+            exp: [],
+            inc: []
+        },
+        totals: {
+            exp: 0,
+            inc: 0
+        }
+    };
+    
+    return {
+        addItem: function(type, des, val){
+            var newitem, ID;
+            
+            if (database.allItems[type].length > 0){
+                ID = database.allItems[type][database.allItems[type].length - 1].id + 1; 
+            } else {
+                console.log(database.allItems.length)
+                ID = 0;
+            }
+            
+            if (type==='exp'){
+                newItem = new Expense(ID, des, val)
+            } else if (type==='inc') {
+                newItem = new Income(ID, des, val)      
+            }
+            
+            database.allItems[type].push(newItem);
+            return newItem;
+        },
+        
+        testing: function(){
+            return database;
+        }
+    }
+    
 })();
 
 
@@ -31,15 +80,29 @@ var UIcontroller = (function(){
 
 var appController = (function(bdgtCtrl, UIctrl){
     
-    var DOMs = UIctrl.getDOMstrings();
+    
+    var setupEventListeners = function(){
+        
+        var DOMs = UIctrl.getDOMstrings();
+        
+        document.querySelector(DOMs.inputBtn).addEventListener('click', ctrlAddItem);
+        
+        document.addEventListener('keypress', function(event){
+            if(event.keyCode === 13 || event.which === 13){
+                ctrlAddItem()
+            };
+        })    
+    }
     
     var ctrlAddItem = function(){
         
+        var input, newItem
+        
         // 1. Get the field input data
-        var input = UIctrl.getInput();
-        console.log(input)
+        input = UIctrl.getInput();
         
         // 2. Add item to the budget controller
+        newItem = bdgtCtrl.addItem(input.type, input.description, input.value);
         
         // 3. Add item to the UI
         
@@ -49,13 +112,13 @@ var appController = (function(bdgtCtrl, UIctrl){
         
     }
     
-    document.querySelector(DOMs.inputBtn).addEventListener('click', ctrlAddItem);
-    
-    document.addEventListener('keypress', function(event){
-        
-        if(event.keyCode === 13 || event.which === 13){
-            ctrlAddItem()
-           };
-    })
-                                                        
+    return {
+        init: function(){
+            console.log('Application has started.');
+            setupEventListeners();
+        }
+    }                                                    
 })(budgetController, UIcontroller);
+
+
+appController.init();
