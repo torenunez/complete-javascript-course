@@ -81,7 +81,7 @@ const controlRecipe = async () => {
             // Render recipe
             console.log(state.recipe);
         } catch (err){
-            alert('Eror processing recipe!');
+            alert('Error processing recipe!');
         }
     }
 };
